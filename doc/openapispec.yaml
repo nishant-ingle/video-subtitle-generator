@@ -1,0 +1,115 @@
+openapi: 3.0.0
+info:
+  title: Public API v1
+  version: 1.0.0
+  description: API for submitting video files for subtitle generation, checking processing status, and downloading results.
+servers:
+  - url: /v1/api
+paths:
+  /upload:
+    post:
+      summary: 'Step 1: Submit job. Returns transactionId immediately.'
+      operationId: submitJob
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: The video file to be processed.
+                language:
+                  type: string
+                  description: The language of the audio in the video file (e.g., "en" for English, "es" for Spanish).
+              required:
+                - file
+                - language
+      responses:
+        '202':
+          description: Job submitted successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transactionId:
+                    type: string
+                    description: The unique identifier for the submitted job.
+                    example: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+        '500':
+          description: Internal server error.
+  /status/{txId}:
+    get:
+      summary: 'Step 2: Poll for status.'
+      operationId: checkStatus
+      parameters:
+        - in: path
+          name: txId
+          schema:
+            type: string
+          required: true
+          description: The transaction ID of the job.
+      responses:
+        '200':
+          description: Current status of the job.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  state:
+                    type: string
+                    enum:
+                      - PROCESSING
+                      - COMPLETED
+                      - ERROR
+                    description: The current state of the job.
+                  error:
+                    type: string
+                    description: Error message if the job state is ERROR.
+                    nullable: true
+                required:
+                  - state
+              examples:
+                processing:
+                  value:
+                    state: PROCESSING
+                completed:
+                  value:
+                    state: COMPLETED
+                error:
+                  value:
+                    state: ERROR
+                    error: "Whisper exited with non-zero code: 1. Check console for Python script errors."
+        '404':
+          description: Job not found.
+  /result/{txId}:
+    get:
+      summary: 'Step 3: Download result once status == COMPLETED.'
+      operationId: downloadResult
+      parameters:
+        - in: path
+          name: txId
+          schema:
+            type: string
+          required: true
+          description: The transaction ID of the job.
+      responses:
+        '200':
+          description: The generated SRT subtitle file.
+          content:
+            application/x-subrip:
+              schema:
+                type: string
+                format: binary
+          headers:
+            Content-Disposition:
+              description: File download disposition.
+              schema:
+                type: string
+                example: attachment; filename=a1b2c3d4-e5f6-7890-1234-567890abcdef.srt
+        '404':
+          description: Job not found or not yet completed.

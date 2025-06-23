@@ -1,0 +1,108 @@
+.container {
+    max-width: 600px;
+    margin: 40px auto;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-family: Arial, sans-serif;
+}
+
+h2 {
+    text-align: center;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+input[type="file"],
+select {
+    width: 100%;
+    padding: 8px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box; 
+}
+
+select {
+    padding: 6px;
+    margin-top: 10px;
+    width: auto; 
+}
+
+button {
+    padding: 8px 16px;
+    margin-top: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.error-message {
+    color: red;
+    margin-top: 20px;
+    font-weight: bold;
+}
+
+.status-message {
+    margin-top: 20px;
+    font-weight: bold;
+}
+
+.status-message span {
+    font-weight: normal;
+    display: block;
+}
+
+.status-message.processing span {
+    color: #555; 
+}
+
+.status-message.download-complete span {
+    color: green;
+}
+
+.status-message.generation-failed span {
+    color: red;
+}
+
+.ready-to-upload-message {
+    margin-top: 20px;
+    font-weight: bold;
+    color: #555;
+}
+
+.select-new-file-message {
+    margin-top: 20px;
+    font-weight: bold;
+    color: #007BFF;
+}
+
+
+.spinner {
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-left-color: #4CAF50;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    animation: spin 1s linear infinite;
+    display: inline-block; 
+    vertical-align: middle; 
+    margin-left: 10px; 
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

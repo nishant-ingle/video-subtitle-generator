@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import './App.css';
 
 const App: React.FC = () => {
   const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -8,6 +9,7 @@ const App: React.FC = () => {
   const [status, setStatus] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -66,6 +68,7 @@ const App: React.FC = () => {
       return;
     }
 
+    setIsProcessing(true);
     setStatus('Processing...');
 
     const interval = setInterval(async () => {
@@ -77,6 +80,7 @@ const App: React.FC = () => {
         if (currentStatus === 'COMPLETED') {
           clearInterval(interval);
           setLoading(false);
+          setIsProcessing(false);
 
           try {
             const fileRes = await axios.get(`http://localhost:8080/v1/api/result/${transactionId}`, {
@@ -114,6 +118,7 @@ const App: React.FC = () => {
           clearInterval(interval);
           setError("Subtitle generation failed. Please try again.");
           setLoading(false);
+          setIsProcessing(false);
           setTransactionId(null);
           setStatus('Generation Failed');
         }
@@ -128,6 +133,7 @@ const App: React.FC = () => {
         }
         setError(errorMessage);
         setLoading(false);
+        setIsProcessing(false);
         setTransactionId(null);
         setStatus('Error Fetching Status');
       }
@@ -138,15 +144,8 @@ const App: React.FC = () => {
   }, [transactionId]);
 
   return (
-      <div style={{
-        maxWidth: '600px',
-        margin: '40px auto',
-        padding: '20px',
-        border: '1px solid #ddd',
-        borderRadius: '6px',
-        fontFamily: 'Arial, sans-serif',
-      }}>
-        <h2 style={{ textAlign: 'center' }}>🎬 Subtitle Generator</h2>
+      <div className="container">
+        <h2>🎬 Subtitle Generator</h2>
         <form onSubmit={handleSubmit}>
           <div>
             <label htmlFor="videoFile">Upload Video File:</label>
@@ -156,7 +155,6 @@ const App: React.FC = () => {
                 accept="video/*"
                 onChange={handleFileChange}
                 disabled={loading || !!transactionId}
-                style={{ width: '100%' }}
             />
           </div>
 
@@ -167,64 +165,55 @@ const App: React.FC = () => {
                 value={language}
                 onChange={(e) => setLanguage(e.target.value)}
                 disabled={loading || !!transactionId}
-                style={{ padding: '6px', marginTop: '10px' }}
             >
               <option value="en">English</option>
               <option value="hi">Hindi</option>
               <option value="mr">Marathi</option>
-              <option value="ge">German</option>
+              <option value="de">German</option>
             </select>
           </div>
 
           <button
               type="submit"
-              /*
-                The button is disabled only if currently loading or a transaction is active.
-                It will be enabled once the previous transaction is complete,
-                but clicking it without selecting a file will trigger the file validation error.
-              */
               disabled={loading || !!transactionId}
-              style={{
-                padding: '8px 16px',
-                marginTop: '10px',
-                backgroundColor: (loading || !!transactionId) ? '#ccc' : '#4CAF50',
-                color: 'white',
-                border: 'none',
-                cursor: (loading || !!transactionId) ? 'not-allowed' : 'pointer',
-              }}
           >
             {loading ? "Uploading..." : transactionId ? "Processing..." : "Upload Video"}
           </button>
         </form>
 
         {error && (
-            <p style={{ color: 'red', marginTop: '20px', fontWeight: 'bold' }}>
+            <p className="error-message">
               Error: {error}
             </p>
         )}
 
         {transactionId && (
-            <p style={{ marginTop: '20px', fontWeight: 'bold' }}>
+            <p className={`status-message ${
+                status === 'Download Complete' ? 'download-complete' :
+                    status === 'Generation Failed' ? 'generation-failed' :
+                        status === 'Processing...' ? 'processing' : ''
+            }`}>
               Status: {status}
+              {isProcessing && <span className="spinner"></span>} {/* Spinner will show next to "Processing..." */}
               {status === 'Processing...' && (
-                  <span style={{ fontWeight: 'normal', display: 'block' }}>Your request is being processed. Please wait...</span>
+                  <span>Your request is being processed. Please wait...</span>
               )}
               {status === 'Download Complete' && (
-                  <span style={{ fontWeight: 'normal', display: 'block', color: 'green' }}>Subtitles downloaded successfully!</span>
+                  <span>Subtitles downloaded successfully!</span>
               )}
               {status === 'Generation Failed' && (
-                  <span style={{ fontWeight: 'normal', display: 'block', color: 'red' }}>Subtitle generation failed.</span>
+                  <span>Subtitle generation failed.</span>
               )}
             </p>
         )}
 
         {!transactionId && !loading && !error && videoFile && (
-            <p style={{ marginTop: '20px', fontWeight: 'bold', color: '#555' }}>
+            <p className="ready-to-upload-message">
               Ready to upload "{videoFile.name}" ({ (videoFile.size / (1024 * 1024)).toFixed(2) } MB)
             </p>
         )}
         {!transactionId && !loading && !error && !videoFile && status === 'Download Complete' && (
-            <p style={{ marginTop: '20px', fontWeight: 'bold', color: '#007BFF' }}>
+            <p className="select-new-file-message">
               Please select a new video file to start another transcription.
             </p>
         )}
